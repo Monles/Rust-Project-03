@@ -27,6 +27,31 @@ struct Rectangle {
     bottom_right: Point,
 }
 
+// Add this function above main
+
+fn rect_area(rect: &Rectangle) -> f32 {
+    let Rectangle {
+        top_left: Point { x: x1, y: y1 },
+        bottom_right: Point { x: x2, y: y2 },
+    } = rect;
+    (x2 - x1).abs() * (y2 - y1).abs()
+}
+
+fn square(top_left: Point, size: f32) -> Rectangle {
+    Rectangle {
+        top_left: Point { x: top_left.x, y: top_left.y },
+        bottom_right: Point { x: top_left.x + size, y: top_left.y - size },
+    }
+}
+
+fn square_area(square: &Rectangle) -> f32 {
+    let Rectangle {
+        top_left: Point { x: x1, y: y1 },
+        bottom_right: Point { x: x2, y: y2 },
+    } = square;
+    (x2 - x1).abs() * (y1 - y2).abs()
+}
+
 fn main() {
     // Create struct with field init shorthand
     let name = String::from("Peter");
@@ -60,6 +85,9 @@ fn main() {
         bottom_right: bottom_right,
     };
 
+    // Calculate and print the area
+    println!("Rectangle area: {}", rect_area(&_rectangle));
+
     // Instantiate a unit struct
     let _unit = Unit;
 
@@ -73,4 +101,12 @@ fn main() {
     let Pair(integer, decimal) = pair;
 
     println!("pair contains {:?} and {:?}", integer, decimal);
+
+    // Example usage:
+    let sq = square(Point { x: 1.0, y: 2.0 }, 3.0);
+    println!(
+        "Square: top_left=({}, {}), bottom_right=({}, {})",
+        sq.top_left.x, sq.top_left.y, sq.bottom_right.x, sq.bottom_right.y
+    );
+    println!("Square area: {}", square_area(&sq));
 }
