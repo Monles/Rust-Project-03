@@ -1,0 +1,6 @@
+[package]
+name = "super_and_self"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
