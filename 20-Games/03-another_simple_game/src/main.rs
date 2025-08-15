@@ -8,7 +8,7 @@ use std::time::Duration;
 use std::collections::VecDeque;
 
 const PLAYER_MOVEMENT_SPEED: i32 = 20;
-const FRAME_RATE: u32 = 20; // More standard frame rate
+const FRAME_RATE: u32 = 20; // More standard frame rate is 60 FPS
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
 
@@ -48,7 +48,20 @@ struct Player {
     sprite: Rect,
     speed: i32,
     direction: Direction,
+    current_frame: u8,
 }
+
+/// Returns the row of the spritesheet corresponding to the given direction
+fn direction_spritesheet_row(direction: Direction) -> i32 {
+    use self::Direction::*;
+    match direction {
+        Up => 3,
+        Down => 0,
+        Left => 1,
+        Right => 2,
+    }
+}
+
 
 impl Player {
     fn new(start_position: Point) -> Self {
@@ -57,6 +70,7 @@ impl Player {
             sprite: Rect::new(0, 0, 26, 36),
             speed: 0,
             direction: Direction::Right,
+            current_frame: 0,
         }
     }
 
@@ -83,7 +97,7 @@ impl Player {
 /// Handles robust input state tracking with opposite key cancellation
 #[derive(Debug)]
 struct InputHandler {
-    direction_stack: VecDeque<Direction>,
+    direction_stack: VecDeque<Direction>, // Handles the order of key presses (complex)
     horizontal_balance: i32, // +1 for right, -1 for left, 0 for balanced/none
     vertical_balance: i32,   // +1 for down, -1 for up, 0 for balanced/none
 }
@@ -135,9 +149,12 @@ impl InputHandler {
     }
 
     fn is_direction_active(&self, direction: Direction) -> bool {
-        match direction {
-            Direction::Left | Direction::Right => self.horizontal_balance != 0,
-            Direction::Up | Direction::Down => self.vertical_balance != 0,
+        if direction.is_horizontal() {
+            self.horizontal_balance != 0
+        } else if direction.is_vertical() {
+            self.vertical_balance != 0
+        } else {
+            false // This should never happen with our current Direction enum
         }
     }
 }
@@ -189,15 +206,21 @@ fn render(
     canvas.clear();
 
     let (width, height) = canvas.output_size()?;
-    let screen_position = player.position + Point::new(width as i32 / 2, height as i32 / 2);
-    let screen_rect = Rect::from_center(
-        screen_position, 
-        player.sprite.width(), 
-        player.sprite.height()
+    let (frame_width, frame_height) = player.sprite.size();
+    let current_frame = Rect::new(
+        player.sprite.x() + frame_width as i32 * i32::from(player.current_frame),
+        player.sprite.y() + frame_height as i32 * direction_spritesheet_row(player.direction),
+        frame_width,
+        frame_height,
     );
-    
-    canvas.copy(texture, player.sprite, screen_rect)?;
+
+     // Treat the center of the screen as the (0, 0) coordinate
+    let screen_position = player.position + Point::new(width as i32 / 2, height as i32 / 2);
+    let screen_rect = Rect::from_center(screen_position, frame_width, frame_height);
+    canvas.copy(texture, current_frame, screen_rect)?;
+
     canvas.present();
+  
 
     Ok(())
 }

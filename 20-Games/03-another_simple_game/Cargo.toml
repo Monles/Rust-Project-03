@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 sdl2 = { version = "0.38.0", default-features = false, features = ["image"] }
-
+specs = "0.14"
+specs-derive = "0.4"
